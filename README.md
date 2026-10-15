@@ -58,7 +58,7 @@ Member는 Safety API로 보유 제품의 리콜을 확인합니다. Outbox에 �
 | **알림 전달** | Safety API 조회 → Outbox 기록 → Kafka → Notification | [Scanner](services/member-service/src/main/java/dev/reguard/member/alerts/RecallAlertScanner.java) · [Producer](services/member-service/src/main/java/dev/reguard/member/alerts/RecallAlertProducer.java) |
 | **웹·실행 환경** | React 화면·Caddy 라우팅·로컬 k3s·영속 볼륨 | [Web](web/) · [Caddy](infra/runtime/Caddyfile) · [Release](infra/release/) |
 
-단일 노드 로컬 k3s에서 실행합니다. 서비스별 DB는 논리적으로 분리되어 있습니다. 서버 장애 격리와 고가용성은 지원하지 않습니다.
+실행 환경은 단일 노드 로컬 k3s입니다. 서비스별로 논리 DB를 분리합니다.
 
 <br />
 
@@ -66,7 +66,7 @@ Member는 Safety API로 보유 제품의 리콜을 확인합니다. Outbox에 �
 
 **필수 환경:** JDK 21 · Python 3.12 · uv · Node.js 22.22.2+ (22.x) 또는 24.15.0+ (24.x) · Docker Compose
 
-모든 명령은 저장소 루트에서 실행합니다. Docker 엔진을 먼저 시작합니다. 이 절차는 Compose DB와 로컬 Java·Vite를 사용하며 k3s를 설치하지 않습니다.
+Docker 엔진을 시작한 뒤 저장소 루트에서 실행합니다. 아래 절차는 PostgreSQL을 Compose로 실행하고 Java·Vite를 로컬에서 실행하는 개발 환경입니다.
 
 `.env`를 만든 뒤 아래 값을 입력합니다. 기존 파일은 유지합니다.
 
@@ -76,7 +76,7 @@ Member는 Safety API로 보유 제품의 리콜을 확인합니다. Outbox에 �
 | `MAIL_ENABLED=true` · `MAIL_FROM` · `SMTP_*` | 회원가입 인증 메일과 비밀번호 재설정 |
 | `FOOD_SAFETY_API_KEY` · `SAFETY_KOREA_API_KEY` | 수집 파이프라인 실행에 필수 |
 
-메일 설정이 없으면 회원가입 인증 메일을 보낼 수 없습니다. DB 비밀번호는 최초 초기화 때 적용됩니다. 기존 DB의 비밀번호는 `.env` 수정만으로 바뀌지 않습니다.
+회원가입에는 SMTP 설정이 필요합니다. DB 비밀번호는 최초 초기화 때 적용되며 기존 DB의 비밀번호 변경은 별도로 진행합니다.
 
 ```bash
 test -f .env || cp .env.example .env
@@ -99,14 +99,14 @@ npm --prefix web run dev               # http://localhost:3000
 
 브라우저에서 `http://localhost:3000`으로 접속합니다. 기존 프로세스가 3000·8081~8083·15432 포트를 사용 중이면 먼저 포트 충돌을 해결합니다.
 
-빈 DB에는 제품·리콜이 없습니다. 아래 수집 절차는 증분 수집이며 과거 전체 데이터를 자동 적재하지 않습니다. 초기 전체 적재는 아래 절차를 따릅니다.
+처음 실행한다면 초기 데이터를 적재한 뒤 증분 수집을 시작합니다.
 
 <details>
 <summary><strong>빈 DB에 초기 데이터 적재</strong></summary>
 
 저장소 루트에서 실행합니다. 앞 단계의 PostgreSQL과 Safety 서비스를 먼저 실행해 DB 스키마를 생성합니다. `.env`에 DB 비밀번호와 두 기관 API 키를 입력합니다. 초기 적재 중에는 Airflow 수집과 Spark를 실행하지 않습니다. 이미 실행 중이면 진행 중인 수집이 끝난 뒤 `bash scripts/airflow.sh stop`으로 중지합니다.
 
-이 절차는 공식 전체 파일을 DB에 직접 적재합니다. 이후 변경분은 위의 Kafka·Spark 수집 절차로 반영합니다. 기관이 제공하는 현재 전체 파일 범위이며 삭제된 과거 자료까지 복원하지는 않습니다.
+기관이 제공하는 현재 전체 파일을 DB에 적재합니다. 이후 변경분은 아래 Kafka·Spark 수집 절차로 반영합니다.
 
 **1. 식품 전체 파일 다운로드**
 
@@ -149,7 +149,7 @@ uv run python scripts/import_food_csv.py --data-dir data/food-bootstrap
 uv run python scripts/match_food_recalls.py
 ```
 
-기본 DB 컨테이너 이름은 `reguard-local-postgres-1`입니다. 이름을 변경했다면 두 명령에 `--container 실제컨테이너이름`을 추가합니다. 결과는 `data/import-reports/`의 실행별 `report.json`에 저장됩니다. `rejected`가 있으면 같은 폴더의 거절 기록을 확인합니다. 명령 종료만으로 전체 행 적재 성공을 판단하지 않습니다.
+기본 DB 컨테이너 이름은 `reguard-local-postgres-1`입니다. 이름을 변경했다면 두 명령에 `--container 실제컨테이너이름`을 추가합니다. 결과는 `data/import-reports/`의 실행별 `report.json`에 저장됩니다. 보고서의 적재 건수와 `rejected` 거절 기록을 확인합니다.
 
 **3. KC 제품과 리콜 적재**
 
@@ -172,7 +172,7 @@ SELECT count(*) AS matches FROM recall_product_matches;
 SQL
 ```
 
-적재 보고서와 DB 건수를 대조한 뒤 `http://localhost:3000/?view=recalls`에서 목록과 상세 내용을 확인합니다. 매칭 건수는 원천 데이터와 규칙에 따라 달라집니다. 확인 후 수집 파이프라인을 시작합니다. 초기 적재는 사용자 물건이나 알림을 생성하지 않습니다.
+적재 보고서와 DB 건수를 대조한 뒤 `http://localhost:3000/?view=recalls`에서 목록과 상세 내용을 확인합니다. 확인 후 수집 파이프라인을 시작합니다. 사용자 물건은 웹에서 등록합니다.
 
 </details>
 
@@ -210,11 +210,14 @@ docker compose --env-file .env -f orchestration/airflow/compose.yml \
 
 ## Verification
 
-외부 API 호출이나 서비스 DB 변경 없이 수행하는 검사:
+Python·Java·웹 테스트와 웹 빌드:
 
 ```bash
 uv run python scripts/check.py --suite all
 ```
+
+<details>
+<summary><strong>Spark 장애 복구 테스트</strong></summary>
 
 Spark 장애 복구 검증에는 Docker 환경과 `reguard-spark:portable-20261015.2` 런타임 이미지가 필요합니다. 이미지가 없으면 다음 명령으로 테스트에 필요한 Spark 이미지만 빌드합니다. 베이스 이미지는 [고정 버전 목록](infra/release/bases.json)을 사용합니다. 현재 릴리스 대상은 Linux ARM64입니다. 다른 아키텍처에서는 에뮬레이션이 필요할 수 있습니다. 검증 도구는 별도 Kafka·PostgreSQL·Spark 컨테이너를 생성하고 종료 후 정리합니다.
 
@@ -226,14 +229,7 @@ docker build --platform linux/arm64 -f infra/release/Spark.Dockerfile \
 uv run python scripts/verify_spark_crash_recovery.py
 ```
 
-| 범위 | 확인된 상태 |
-|---|---|
-| 서비스 | 로그인·물건 CRUD·프로필·알림 구현 |
-| 데이터 정합성 | 커밋 경계 종료·체크포인트 복구·증분 매칭 검증 |
-| 실행·복구 | 별도 로컬 k3s 환경 설치 및 백업 복원 검증 |
-| AWS | 배포 준비 코드 포함 · **배포·운영 미실시** |
-
-공개 검증 결과는 `assets/readme/verification/`에 보관합니다. 개인 문서·인증정보·원본 데이터·백업·런타임 로그는 Git에서 제외합니다.
+</details>
 
 <br />
 
@@ -244,7 +240,7 @@ services/         회원·안전 정보·알림 Spring Boot 서비스
 pipelines/        기관별 수집·정규화·저장·매칭
 orchestration/    Airflow DAG와 수집·품질 검사 조율
 web/              React 웹 애플리케이션
-infra/            Compose·k3s·릴리스 및 AWS 준비 설정
+infra/            실행 환경·컨테이너·배포 설정
 scripts/          실행·설치·복구 도구와 통합 검증
 assets/readme/    공개 데모·아키텍처·검증 결과
 ```
