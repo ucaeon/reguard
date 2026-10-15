@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "scenarios": [
+    {
+      "boundary": "before_commit",
+      "status": "passed",
+      "exit_code": 137,
+      "checkpoint_commit_absent_before_kill": true,
+      "checkpoint_identity_preserved": true,
+      "committed_after_resume": true,
+      "counts_before_kill": {
+        "products": 0,
+        "recalls": 0,
+        "ingestion_events": 0,
+        "ingestion_offsets": 0,
+        "recall_product_matches": 0
+      },
+      "final_counts": {
+        "products": 36,
+        "recalls": 1,
+        "ingestion_events": 37,
+        "ingestion_offsets": 40,
+        "recall_product_matches": 1,
+        "ingestion_batches": 2
+      },
+      "kafka_messages": 40,
+      "unique_events": 37,
+      "missing_products": 0,
+      "extra_products": 0,
+      "all_kafka_offsets_accounted": true,
+      "empty_restart_unchanged": true
+    },
+    {
+      "boundary": "after_commit",
+      "status": "passed",
+      "exit_code": 137,
+      "checkpoint_commit_absent_before_kill": true,
+      "checkpoint_identity_preserved": true,
+      "committed_after_resume": true,
+      "counts_before_kill": {
+        "products": 24,
+        "recalls": 1,
+        "ingestion_events": 25,
+        "ingestion_offsets": 25,
+        "recall_product_matches": 1
+      },
+      "final_counts": {
+        "products": 36,
+        "recalls": 1,
+        "ingestion_events": 37,
+        "ingestion_offsets": 40,
+        "recall_product_matches": 1,
+        "ingestion_batches": 2
+      },
+      "kafka_messages": 40,
+      "unique_events": 37,
+      "missing_products": 0,
+      "extra_products": 0,
+      "all_kafka_offsets_accounted": true,
+      "empty_restart_unchanged": true
+    }
+  ],
+  "method": "real Spark JVM/Python container SIGKILL; original checkpoint restart; isolated Kafka/PostgreSQL",
+  "source_sha256": {
+    "pipelines/spark/sink.py": "b79b2ccdfe0593d50730ce7182b16b4b742848c895fb3d016bfabc545be88acd",
+    "pipelines/spark/streaming_job.py": "4498d9483e9af0abd8dcc0ded043a5b361aff72778dd9f27d4d40a62656d8da7",
+    "scripts/verify_spark_crash_recovery.py": "000422c53e2afd068b553f3032bb21844007934858829ce2ddf70f791c0281d6"
+  },
+  "completed_at": "2026-10-15T15:30:08.057094+00:00"
+}

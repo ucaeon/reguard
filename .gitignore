@@ -1,0 +1,52 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+# Local data and runtime state
+data/
+logs/
+checkpoints/
+*.log
+# Java / Python / Web
+.gradle/
+build/
+target/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+node_modules/
+dist/
+coverage/
+# Editor / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Documentation and local notes
+/docs/
+# Generated test reports and caches
+htmlcov/
+.coverage
+.coverage.*
+.mypy_cache/
+.tox/
+.nox/
+*.egg-info/
+# Temporary editor files
+*.swp
+*.swo
+*~
+
+# Local development instructions
+/AGENTS.md
+
+.local-notes/

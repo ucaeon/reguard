@@ -1,0 +1,88 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: reguard-backups
+provisioner: rancher.io/local-path
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-backups
+  namespace: reguard
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: reguard-backups
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: reguard
+spec:
+  schedule: '30 3 * * *'
+  timeZone: Asia/Seoul
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 43200
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 604800
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: database-backup
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            fsGroup: 999
+          containers:
+            - name: backup
+              image: postgres:17.11-bookworm
+              command: [/bin/bash, /scripts/run.sh]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              env:
+                - name: MEMBER_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef: {name: postgres-env, key: MEMBER_DB_PASSWORD}
+                - name: SAFETY_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef: {name: postgres-env, key: SAFETY_DB_PASSWORD}
+                - name: NOTIFICATION_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef: {name: postgres-env, key: NOTIFICATION_DB_PASSWORD}
+                - name: AIRFLOW_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef: {name: metadata-env, key: POSTGRES_PASSWORD}
+              resources:
+                requests: {cpu: 100m, memory: 128Mi}
+                limits: {cpu: '1', memory: 512Mi}
+              volumeMounts:
+                - {name: scripts, mountPath: /scripts, readOnly: true}
+                - {name: backups, mountPath: /backups}
+                - {name: scratch, mountPath: /scratch}
+                - {name: tmp, mountPath: /tmp}
+          volumes:
+            - name: scripts
+              configMap: {name: database-backup-script}
+            - name: backups
+              persistentVolumeClaim: {claimName: database-backups}
+            - name: scratch
+              emptyDir: {sizeLimit: 6Gi}
+            - name: tmp
+              emptyDir: {sizeLimit: 64Mi}

@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: notification-service
+  flyway:
+    enabled: true
+    clean-disabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:19092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
+      auto-startup: ${ALERTS_ENABLED:false}
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:15432}/reguard_notification
+    username: reguard_notification
+    password: ${NOTIFICATION_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8083}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+
+reguard:
+  web:
+    allowed-origins: ${WEB_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+  member-base-url: ${MEMBER_BASE_URL:http://127.0.0.1:8081}
+  alert-topic: ${ALERT_TOPIC:reguard.recall-alerts.v1}
+  alert-group: ${ALERT_GROUP:reguard-notification-v1}

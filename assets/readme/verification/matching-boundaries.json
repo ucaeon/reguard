@@ -1,0 +1,195 @@
+{
+  "status": "passed",
+  "environment": "disposable PostgreSQL schemas; synthetic fixtures",
+  "boundary_method": "SIGKILL around psycopg transaction exit; identical batch replay, not Spark process termination",
+  "scenarios": [
+    {
+      "scenario": "before_commit",
+      "status": "passed",
+      "exit_signal": "SIGKILL",
+      "replay": {
+        "input": 2,
+        "applied": 2,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 1,
+        "changed_recalls": 1,
+        "matching_rules": [
+          "food_matching.sql"
+        ],
+        "elapsed_seconds": 0.019
+      }
+    },
+    {
+      "scenario": "after_commit",
+      "status": "passed",
+      "exit_signal": "SIGKILL",
+      "replay": {
+        "input": 2,
+        "applied": 0,
+        "duplicate": 2,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 0,
+        "changed_recalls": 0,
+        "elapsed_seconds": 0.006
+      }
+    },
+    {
+      "scenario": "new_run_same_content",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 1,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 1,
+        "changed_products": 0,
+        "changed_recalls": 0,
+        "elapsed_seconds": 0.009
+      }
+    },
+    {
+      "scenario": "source_timestamp_only",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 1,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 1,
+        "changed_products": 0,
+        "changed_recalls": 0,
+        "elapsed_seconds": 0.009
+      }
+    },
+    {
+      "scenario": "product_content_changed",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 1,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 1,
+        "changed_recalls": 0,
+        "matching_rules": [
+          "food_matching.sql"
+        ],
+        "elapsed_seconds": 0.016
+      }
+    },
+    {
+      "scenario": "same_event_new_offset",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 0,
+        "duplicate": 1,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 0,
+        "changed_recalls": 0,
+        "elapsed_seconds": 0.008
+      }
+    },
+    {
+      "scenario": "kc_insert",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 1,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 1,
+        "changed_recalls": 0,
+        "matching_rules": [
+          "kc_matching.sql"
+        ],
+        "elapsed_seconds": 0.016
+      }
+    },
+    {
+      "scenario": "identifier_only_change",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 1,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 1,
+        "changed_recalls": 0,
+        "matching_rules": [
+          "kc_matching.sql"
+        ],
+        "elapsed_seconds": 0.015
+      }
+    },
+    {
+      "scenario": "identifier_only_removal",
+      "status": "passed",
+      "metrics": {
+        "input": 1,
+        "applied": 1,
+        "duplicate": 0,
+        "stale": 0,
+        "quarantined": 0,
+        "unchanged": 0,
+        "changed_products": 1,
+        "changed_recalls": 0,
+        "matching_rules": [
+          "kc_matching.sql"
+        ],
+        "elapsed_seconds": 0.013
+      }
+    },
+    {
+      "scenario": "kc_model_changed",
+      "status": "passed",
+      "equivalent": true,
+      "unrelated_preserved": true
+    },
+    {
+      "scenario": "kc_recall_changed",
+      "status": "passed",
+      "equivalent": true,
+      "unrelated_preserved": true
+    },
+    {
+      "scenario": "identifier_removed",
+      "status": "passed",
+      "equivalent": true,
+      "unrelated_preserved": true
+    },
+    {
+      "scenario": "identifier_changed",
+      "status": "passed",
+      "equivalent": true,
+      "unrelated_preserved": true
+    },
+    {
+      "scenario": "recall_changed",
+      "status": "passed",
+      "equivalent": true,
+      "unrelated_preserved": true
+    }
+  ],
+  "source_sha256": {
+    "pipelines/spark/sink.py": "b79b2ccdfe0593d50730ce7182b16b4b742848c895fb3d016bfabc545be88acd",
+    "scripts/verify_matching_boundaries.py": "cb4c40d76fdda059754717af2de09bfe3ac55b5be7758763d736de6ca97c193b",
+    "scripts/verify_incremental_matching.py": "fbd64235377a0d30ebd268ce882491c5b118ea00ceb12e60bb781b665cc5b854"
+  },
+  "completed_at": "2026-10-15T15:25:29.195853+00:00"
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=ReGuard database backups and restore verification
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/reguard
+ExecStart=/opt/reguard/.venv/bin/python scripts/database_backup.py create --container reguard-local-postgres-1 --database reguard_member --user reguard_member
+ExecStart=/opt/reguard/.venv/bin/python scripts/database_backup.py create --container reguard-local-postgres-1 --database reguard_safety --user reguard_safety
+ExecStart=/opt/reguard/.venv/bin/python scripts/database_backup.py create --container reguard-local-postgres-1 --database reguard_notification --user reguard_notification
+ExecStart=/opt/reguard/.venv/bin/python scripts/database_backup.py create --container reguard-airflow-metadata-1 --database airflow --user airflow
+TimeoutStartSec=1h
+UMask=0077

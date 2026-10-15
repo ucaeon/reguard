@@ -1,0 +1,77 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  application:
+    name: member-service
+  flyway:
+    enabled: true
+    clean-disabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+  task:
+    scheduling:
+      pool:
+        size: 2
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:19092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.block.ms: 5000
+        delivery.timeout.ms: 10000
+        request.timeout.ms: 5000
+  mail:
+    host: ${SMTP_HOST:127.0.0.1}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.starttls.required: ${SMTP_STARTTLS:true}
+      mail.smtp.ssl.enable: ${SMTP_SSL:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:15432}/reguard_member
+    username: reguard_member
+    password: ${MEMBER_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8081}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+
+reguard:
+  web:
+    allowed-origins: ${WEB_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:}
+  password-reset-url: ${PASSWORD_RESET_URL:http://localhost:3000/reset-password}
+  alerts:
+    enabled: ${ALERTS_ENABLED:false}
+    scan-delay-ms: ${ALERT_SCAN_DELAY_MS:60000}
+    publish-delay-ms: ${ALERT_PUBLISH_DELAY_MS:3000}
+  alert-topic: ${ALERT_TOPIC:reguard.recall-alerts.v1}
+  safety-base-url: ${SAFETY_BASE_URL:http://127.0.0.1:8082}

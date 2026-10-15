@@ -1,0 +1,114 @@
+name: reguard-airflow
+x-airflow: &airflow
+  image: reguard-airflow:3.1.8
+  build: .
+  env_file: ../../.env.airflow
+  environment: &environment
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__PARALLELISM: '2'
+    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: '2'
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Seoul
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: admin:admin
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/state/ui-passwords.json
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://api-server:8080/execution/
+    AIRFLOW__API__BASE_URL: http://localhost:18080
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: '15'
+    REGUARD_DATA_ROOT: /opt/reguard/data/airflow
+    REGUARD_STATE_ROOT: /opt/airflow/state/ingestion
+    FOOD_SAFETY_API_KEY: ${FOOD_SAFETY_API_KEY:?Set FOOD_SAFETY_API_KEY}
+    SAFETY_KOREA_API_KEY: ${SAFETY_KOREA_API_KEY:?Set SAFETY_KOREA_API_KEY}
+    SAFETY_DB_PASSWORD: ${SAFETY_DB_PASSWORD:?Set SAFETY_DB_PASSWORD}
+    DB_HOST: postgres
+    DB_PORT: '5432'
+    KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  volumes:
+    - ./dags:/opt/airflow/dags:ro
+    - ../../orchestration:/opt/reguard/orchestration:ro
+    - ../../pipelines:/opt/reguard/pipelines:ro
+    - ../../scripts:/opt/reguard/scripts:ro
+    - ../../data/airflow:/opt/reguard/data/airflow
+    - airflow-logs:/opt/airflow/logs
+    - airflow-state:/opt/airflow/state
+  networks: [default, events, application]
+  depends_on:
+    metadata:
+      condition: service_healthy
+  restart: unless-stopped
+services:
+  permissions:
+    <<: *airflow
+    user: '0:0'
+    entrypoint: /bin/bash
+    command: -c 'chown -R 50000:0 /opt/airflow/state /opt/airflow/logs /opt/reguard/data/airflow'
+    restart: 'no'
+  metadata:
+    image: postgres:17.11-bookworm
+    env_file: ../../.env.airflow
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_DB: airflow
+    volumes: [airflow-metadata:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U airflow -d airflow]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  init:
+    <<: *airflow
+    command: bash -c 'airflow db migrate && airflow pools set food_api 1 "Shared food API key" && airflow pools set safety_api 1 "Safety Korea API"'
+    restart: 'no'
+  api-server:
+    <<: *airflow
+    command: api-server
+    ports: ['127.0.0.1:18080:8080']
+    healthcheck:
+      test: [CMD, curl, --fail, http://localhost:8080/api/v2/monitor/health]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+  scheduler:
+    <<: *airflow
+    command: scheduler
+    healthcheck:
+      test: [CMD, curl, --fail, http://localhost:8974/health]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+  dag-processor:
+    <<: *airflow
+    command: dag-processor
+  spark:
+    image: reguard-spark:4.0.3
+    build:
+      context: .
+      dockerfile: Spark.Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      SAFETY_DB_PASSWORD: ${SAFETY_DB_PASSWORD:?Set SAFETY_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    volumes:
+      - ../../pipelines:/opt/reguard/pipelines:ro
+      - ../../scripts:/opt/reguard/scripts:ro
+      - spark-checkpoints:/checkpoints
+      - spark-ivy:/root/.ivy2.5
+    networks: [events, application]
+    restart: unless-stopped
+networks:
+  events:
+    external: true
+    name: reguard-events_default
+  application:
+    external: true
+    name: reguard-local_default
+volumes:
+  airflow-metadata:
+  airflow-logs:
+  airflow-state:
+  spark-checkpoints:
+  spark-ivy:

@@ -1,0 +1,15 @@
+:root {
+    --color-label: #747c86;
+    --color-heading: #20252b;
+    --color-border-soft: #eceef0;
+    --color-border: #e8eaed;
+    --color-surface-muted: #f6f7f8;
+    --color-surface: #fff;
+    --color-brand: #0f766e;
+    --color-text: #191f28;
+    --color-text-secondary: #4e5968;
+    --color-text-muted: #6b7684;
+    --color-brand-soft: #edf6f5;
+    --color-danger-soft: #fceef0;
+    --color-danger: #b45360;
+}

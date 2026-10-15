@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: safety-service
+  flyway:
+    enabled: true
+    clean-disabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:15432}/reguard_safety
+    username: reguard_safety
+    password: ${SAFETY_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8082}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db

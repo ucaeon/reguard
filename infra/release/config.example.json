@@ -1,0 +1,9 @@
+{
+  "namespace": "reguard",
+  "mode": "production",
+  "origin": "https://reguard.example.com",
+  "storage_class": "reguard-retained",
+  "smtp_host": "smtp.example.com",
+  "smtp_port": 587,
+  "mail_from": "reguard@example.com"
+}

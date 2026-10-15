@@ -1,0 +1,142 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "CronJob",
+  "metadata": {
+    "name": "database-backup",
+    "namespace": "reguard"
+  },
+  "spec": {
+    "concurrencyPolicy": "Forbid",
+    "failedJobsHistoryLimit": 3,
+    "jobTemplate": {
+      "spec": {
+        "activeDeadlineSeconds": 3600,
+        "backoffLimit": 2,
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "database-backup"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "/bin/bash",
+                  "/opt/reguard/backup.sh"
+                ],
+                "env": [
+                  {
+                    "name": "MEMBER_DB_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "MEMBER_DB_PASSWORD",
+                        "name": "postgres-env"
+                      }
+                    }
+                  },
+                  {
+                    "name": "SAFETY_DB_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "SAFETY_DB_PASSWORD",
+                        "name": "postgres-env"
+                      }
+                    }
+                  },
+                  {
+                    "name": "NOTIFICATION_DB_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "NOTIFICATION_DB_PASSWORD",
+                        "name": "postgres-env"
+                      }
+                    }
+                  },
+                  {
+                    "name": "AIRFLOW_DB_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "POSTGRES_PASSWORD",
+                        "name": "metadata-env"
+                      }
+                    }
+                  }
+                ],
+                "image": "postgres:17.11-bookworm",
+                "name": "backup",
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true
+                },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/backups",
+                    "name": "backups"
+                  },
+                  {
+                    "mountPath": "/scratch",
+                    "name": "scratch"
+                  },
+                  {
+                    "mountPath": "/tmp",
+                    "name": "tmp"
+                  }
+                ],
+                "imagePullPolicy": "Never"
+              }
+            ],
+            "restartPolicy": "Never",
+            "securityContext": {
+              "fsGroup": 999,
+              "runAsGroup": 999,
+              "runAsNonRoot": true,
+              "runAsUser": 999
+            },
+            "volumes": [
+              {
+                "name": "backups",
+                "persistentVolumeClaim": {
+                  "claimName": "database-backups"
+                }
+              },
+              {
+                "emptyDir": {
+                  "sizeLimit": "6Gi"
+                },
+                "name": "scratch"
+              },
+              {
+                "emptyDir": {
+                  "sizeLimit": "64Mi"
+                },
+                "name": "tmp"
+              }
+            ]
+          }
+        },
+        "ttlSecondsAfterFinished": 604800
+      }
+    },
+    "schedule": "30 3 * * *",
+    "startingDeadlineSeconds": 43200,
+    "successfulJobsHistoryLimit": 3,
+    "timeZone": "Asia/Seoul"
+  }
+}

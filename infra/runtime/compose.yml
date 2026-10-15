@@ -1,0 +1,88 @@
+name: reguard-runtime
+x-service: &service
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 768m
+  cpus: 1.0
+  networks: [application, events]
+x-environment: &environment
+  SERVER_ADDRESS: 0.0.0.0
+  DB_HOST: ${RUNTIME_DB_HOST:?Set RUNTIME_DB_HOST}
+  DB_PORT: '5432'
+  COOKIE_SECURE: 'true'
+  WEB_ALLOWED_ORIGINS: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+  SERVER_FORWARD_HEADERS_STRATEGY: framework
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/runtime/Web.Dockerfile
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+    ports: ['80:80', '443:443']
+    volumes: [caddy-data:/data, caddy-config:/config]
+    networks: [application]
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    depends_on:
+      member: {condition: service_healthy}
+      safety: {condition: service_healthy}
+      notification: {condition: service_healthy}
+  member:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: infra/runtime/Service.Dockerfile
+      args: {SERVICE: member-service}
+    environment:
+      <<: *environment
+      SERVER_PORT: '8081'
+      MEMBER_DB_PASSWORD: ${MEMBER_DB_PASSWORD:?Set MEMBER_DB_PASSWORD}
+      SAFETY_BASE_URL: http://safety:8082
+      KAFKA_BOOTSTRAP_SERVERS: ${RUNTIME_KAFKA_SERVERS:?Set RUNTIME_KAFKA_SERVERS}
+      ALERTS_ENABLED: 'true'
+      MAIL_ENABLED: 'true'
+      MAIL_FROM: ${MAIL_FROM:?Set MAIL_FROM}
+      SMTP_HOST: ${SMTP_HOST:?Set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:?Set SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?Set SMTP_PASSWORD}
+      SMTP_STARTTLS: 'true'
+      PASSWORD_RESET_URL: https://${PUBLIC_DOMAIN}/?view=reset-password
+  safety:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: infra/runtime/Service.Dockerfile
+      args: {SERVICE: safety-service}
+    environment:
+      <<: *environment
+      SERVER_PORT: '8082'
+      SAFETY_DB_PASSWORD: ${SAFETY_DB_PASSWORD:?Set SAFETY_DB_PASSWORD}
+  notification:
+    <<: *service
+    build:
+      context: ../..
+      dockerfile: infra/runtime/Service.Dockerfile
+      args: {SERVICE: notification-service}
+    environment:
+      <<: *environment
+      SERVER_PORT: '8083'
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?Set NOTIFICATION_DB_PASSWORD}
+      MEMBER_BASE_URL: http://member:8081
+      KAFKA_BOOTSTRAP_SERVERS: ${RUNTIME_KAFKA_SERVERS:?Set RUNTIME_KAFKA_SERVERS}
+      ALERTS_ENABLED: 'true'
+networks:
+  application:
+    external: true
+    name: ${RUNTIME_APPLICATION_NETWORK:?Set private DB network}
+  events:
+    external: true
+    name: ${RUNTIME_EVENTS_NETWORK:?Set private Kafka network}
+volumes:
+  caddy-data:
+  caddy-config:

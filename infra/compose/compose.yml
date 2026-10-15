@@ -1,0 +1,22 @@
+name: reguard-local
+services:
+  postgres:
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_USER: reguard_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      MEMBER_DB_PASSWORD: ${MEMBER_DB_PASSWORD:?Set MEMBER_DB_PASSWORD}
+      SAFETY_DB_PASSWORD: ${SAFETY_DB_PASSWORD:?Set SAFETY_DB_PASSWORD}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?Set NOTIFICATION_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${DB_PORT:-15432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reguard_admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+volumes:
+  postgres-data:

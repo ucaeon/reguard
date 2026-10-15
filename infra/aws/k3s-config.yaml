@@ -1,0 +1,9 @@
+write-kubeconfig-mode: '0600'
+secrets-encryption: true
+disable:
+  - traefik
+  - servicelb
+kubelet-arg:
+  - 'system-reserved=cpu=200m,memory=300Mi'
+  - 'kube-reserved=cpu=200m,memory=512Mi'
+  - 'eviction-hard=memory.available<200Mi,nodefs.available<10%'

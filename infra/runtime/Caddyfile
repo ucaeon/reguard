@@ -1,0 +1,32 @@
+{$PUBLIC_DOMAIN} {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Frame-Options DENY
+        Strict-Transport-Security "max-age=31536000"
+    }
+    @notifications path /api/v1/me/notifications /api/v1/me/notifications/*
+    handle @notifications {
+        reverse_proxy notification:8083
+    }
+    @member path /api/v1/auth/* /api/v1/me /api/v1/me/*
+    handle @member {
+        reverse_proxy member:8081
+    }
+    handle /api/* {
+        reverse_proxy safety:8082
+    }
+    handle /actuator* {
+        respond 404
+    }
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}
+
+:8081 {
+    respond /health "ok" 200
+}

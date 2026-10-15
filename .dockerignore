@@ -1,0 +1,17 @@
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.local-notes
+docs
+data
+logs
+checkpoints
+**/node_modules
+**/target
+**/dist
+**/__pycache__
+.venv
+.idea
+**/*.pem
+**/*.key

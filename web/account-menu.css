@@ -1,0 +1,115 @@
+.account-menu {
+    position: relative;
+    flex-shrink: 0;
+    font-family: inherit;
+    z-index: 100;
+}
+.account-menu .account-trigger {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 24px;
+    background: transparent;
+    padding: 6px 10px;
+    color: #333d4b;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1.4;
+}
+.account-menu .account-trigger:hover {
+    background: #f5f6f7;
+}
+.account-trigger img,
+.account-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.account-avatar {
+    display: grid;
+    place-items: center;
+    background: #eaf4f3;
+    color: var(--color-brand);
+    font-weight: 700;
+}
+.account-name {
+    max-width: 120px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.account-chevron {
+    color: #8b95a1;
+}
+.account-menu .account-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 184px;
+    padding: 6px;
+    background: white;
+    border: 1px solid #e8ebed;
+    border-radius: 12px;
+    box-shadow: 0 8px 28px #191f2812;
+    text-align: left;
+}
+.account-menu .account-dropdown a,
+.account-menu .account-dropdown button {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    text-align: left;
+    text-decoration: none;
+    color: #333d4b;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+.account-menu .account-dropdown a:hover,
+.account-menu .account-dropdown button:hover {
+    background: #f4f6f7;
+    color: var(--color-brand);
+}
+.account-menu button:focus-visible,
+.account-menu a:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+}
+.account-menu .account-dropdown p {
+    font-size: 13px;
+    color: #b74e60;
+    padding: 0 10px;
+    line-height: 1.5;
+}
+.account-login {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.account-loading {
+    display: block;
+    width: 90px;
+    height: 40px;
+}
+@media (max-width: 600px) {
+    .account-name {
+        max-width: 76px;
+    }
+    .settings-header {
+        flex-wrap: wrap;
+    }
+    .settings-header nav {
+        order: 3;
+        width: 100%;
+        gap: 16px;
+    }
+}

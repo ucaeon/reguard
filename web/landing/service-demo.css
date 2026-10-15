@@ -1,0 +1,274 @@
+.service-demo {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+.service-demo .lp-screen-bar {
+    flex: 0 0 38px;
+    gap: 5px;
+    padding-inline: 14px;
+}
+.service-demo .lp-screen-bar small {
+    margin-left: auto;
+    font-size: 10px;
+    color: #7a858b;
+}
+.service-demo .lp-screen-bar button {
+    margin-left: 8px;
+    padding: 5px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 10px;
+    color: #52666a;
+    cursor: pointer;
+}
+.service-demo-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    background: #fff;
+    overflow: hidden;
+    aspect-ratio: 1.35;
+}
+.service-demo-capture {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.45s ease;
+}
+.service-demo-capture.is-current {
+    opacity: 1;
+    visibility: visible;
+}
+.service-demo-pointer {
+    animation: service-pointer var(--frame-duration, 5s) ease-in-out infinite
+        both;
+    animation-play-state: paused;
+    transform-origin: 0 0;
+    filter: drop-shadow(0 3px 3px #183d352e);
+}
+.service-demo-click {
+    animation: service-click var(--frame-duration, 5s) ease-out infinite both;
+    animation-play-state: paused;
+    transform-origin: 0 0;
+    opacity: 0;
+}
+.service-demo.is-playing .service-demo-pointer,
+.service-demo.is-playing .service-demo-click {
+    animation-play-state: running;
+}
+.service-demo-controls {
+    flex: 0 0 auto;
+    border-top: 1px solid #edf0ef;
+    padding: 11px 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+.service-demo-controls p {
+    margin: 0;
+    color: #637078;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.service-demo-controls [role="group"] {
+    display: flex;
+    flex-shrink: 0;
+}
+.service-demo-controls button {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+.service-demo-controls button span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #d5e3e1;
+}
+.service-demo-controls button[aria-pressed="true"] span {
+    background: #0b7972;
+    width: 15px;
+    border-radius: 5px;
+}
+.service-demo button:focus-visible {
+    outline: 2px solid #0b7972;
+    outline-offset: 2px;
+}
+.service-demo-error {
+    padding: 30px;
+    font-size: 13px;
+    color: #637078;
+}
+.lp-step-screen.is-active {
+    pointer-events: auto;
+}
+.lp-recall-visual .service-demo-stage {
+    aspect-ratio: 1;
+}
+.lp-alert-visual .service-demo-stage {
+    aspect-ratio: 1.85;
+}
+.lp-alert-slot {
+    pointer-events: none;
+}
+@keyframes service-pointer {
+    0%,
+    10% {
+        opacity: 0;
+        transform: translate(85px, 65px);
+    }
+    18% {
+        opacity: 1;
+    }
+    40%,
+    72% {
+        opacity: 1;
+        transform: translate(0, 0);
+    }
+    48% {
+        transform: scale(0.9);
+    }
+    90%,
+    100% {
+        opacity: 0;
+        transform: translate(0, 0);
+    }
+}
+@keyframes service-click {
+    0%,
+    45% {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+    49% {
+        opacity: 0.6;
+    }
+    65%,
+    100% {
+        opacity: 0;
+        transform: scale(1.7);
+    }
+}
+@media (max-width: 700px) {
+    .service-demo .lp-screen-bar {
+        padding-inline: 10px;
+    }
+    .service-demo-controls {
+        padding: 8px 10px;
+    }
+    .service-demo-controls p {
+        font-size: 10px;
+    }
+    .lp-alert-visual .service-demo-stage {
+        aspect-ratio: 1.35;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .service-demo-capture {
+        transition: none;
+    }
+    .service-demo-pointer {
+        display: none;
+        animation: none;
+    }
+    .service-demo-click {
+        animation: none;
+    }
+}
+
+.service-demo-controls [hidden] {
+    display: none;
+}
+.lp-step h3 button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.lp-step h3 button:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 5px;
+}
+
+.service-demo-scroll {
+    animation: service-scroll var(--frame-duration) ease-in-out both;
+    animation-play-state: paused;
+}
+.service-demo.is-playing .is-current .service-demo-scroll {
+    animation-play-state: running;
+}
+.service-demo-capture:has(image[href*="search-type"]),
+.service-demo-capture:has(image[href*="search-empty"]) {
+    transition: none;
+}
+@keyframes service-scroll {
+    0%,
+    15% {
+        transform: translateY(0);
+    }
+    70%,
+    100% {
+        transform: translateY(var(--scroll-y));
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .service-demo-scroll {
+        animation: none;
+        transform: translateY(var(--scroll-y));
+    }
+}
+
+.service-demo--alerts .service-demo-capture.is-current {
+    transform-origin: center;
+    animation:
+        service-alert-enter 0.7s ease-out both,
+        service-alert-drift 7s 0.7s ease-in-out infinite alternate;
+    animation-play-state: paused;
+}
+.service-demo--alerts.is-playing .service-demo-capture.is-current {
+    animation-play-state: running;
+}
+@keyframes service-alert-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes service-alert-drift {
+    from {
+        transform: translateY(0) scale(1);
+    }
+    to {
+        transform: translateY(-4px) scale(1.012);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .service-demo--alerts .service-demo-capture.is-current {
+        animation: none;
+        transform: none;
+    }
+}
+
+@media (max-width: 700px), (prefers-reduced-motion: reduce) {
+    .lp-step-screen:not(.is-active) { display: none; }
+    .lp-step-screen.is-active { display: block; opacity: 1; transform: none; }
+}
