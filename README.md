@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Airflow-DAG-017CEE?style=flat-square&amp;logo=apacheairflow&amp;logoColor=white" alt="Airflow" />
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&amp;logo=postgresql&amp;logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/k3s-Local-FFC61C?style=flat-square&amp;logo=k3s&amp;logoColor=black" alt="Local k3s" />
+  <img src="https://img.shields.io/badge/k3s-FFC61C?style=flat-square&amp;logo=k3s&amp;logoColor=black" alt="k3s" />
 </p>
 
 <p align="center">
@@ -29,21 +29,21 @@
 
 ## Overview
 
-ReGuard는 식품안전나라와 Safety Korea의 제품·리콜 데이터를 통합해 등록한 물건의 리콜 소식을 알려주는 서비스입니다.
+ReGuard는 식품안전나라와 Safety Korea의 제품과 리콜 데이터를 통합해 등록한 물건의 리콜 소식을 알려주는 서비스입니다.
 
 수집 → 정규화 → 제품 식별 → 리콜 매칭 → 알림으로 이어집니다. 재처리 시 중복 반영을 막고 제품 정보가 바뀌면 기존 매칭을 갱신합니다.
 
-| 제품 검색·등록 | 리콜 정보 확인 | 내 물건 알림 |
+| 제품 검색과 등록 | 리콜 정보 확인 | 내 물건 알림 |
 |:---:|:---:|:---:|
-| 제품명·식별자로 검색하고 직접 등록 | 리콜 사유·대상 조건·조치 방법 확인 | 등록 물건의 관련 리콜과 변경 소식 확인 |
-| 등록 정보 수정·삭제 | 확정 매칭과 후보 구분 | 읽음 처리·미확인 개수·수신 설정 |
+| 제품명이나 식별자로 검색하고 직접 등록 | 리콜 사유와 대상 조건 확인<br />조치 방법 안내 | 등록 물건의 관련 리콜과 변경 소식 확인 |
+| 등록 정보 수정과 삭제 | 확정 매칭과 후보 구분 | 읽음 처리와 미확인 개수 표시<br />알림 수신 설정 |
 
 <br />
 
 ## Architecture
 
 <p align="center">
-  <img src="assets/readme/architecture.png" width="1000" alt="ReGuard 구조: 공공 API → Airflow·Python → Kafka → Spark → Safety DB. React·Caddy를 통한 서비스별 요청과 Outbox·Kafka를 통한 알림 전달." />
+  <img src="assets/readme/architecture.png" width="1000" alt="ReGuard 서비스 구조와 데이터 흐름" />
 </p>
 
 배포 구성에서는 React 웹의 요청을 Caddy가 담당 서비스로 전달합니다. 아래 개발 실행 절차에서는 Vite 프록시가 같은 역할을 합니다. 수집 데이터는 Kafka와 Spark를 거쳐 Safety DB에 저장됩니다.
@@ -52,11 +52,11 @@ Member는 Safety API로 보유 제품의 리콜을 확인합니다. Outbox에 �
 
 | 흐름 | 책임 | 구현 |
 |---|---|---|
-| **수집·스케줄링** | 기관별 수집·원본 보존·재시도·완료 확인 | [Collectors](pipelines/collectors/) · [Airflow](orchestration/airflow/) |
-| **정규화·저장** | 이벤트 검증·중복 및 과거 버전 처리·저장·매칭 | [Spark pipeline](pipelines/spark/) |
-| **서비스 API** | 회원·보유제품 / 제품·리콜 / 알림의 책임과 DB 소유권 분리 | [Member](services/member-service/) · [Safety](services/safety-service/) · [Notification](services/notification-service/) |
-| **알림 전달** | Safety API 조회 → Outbox 기록 → Kafka → Notification | [Scanner](services/member-service/src/main/java/dev/reguard/member/alerts/RecallAlertScanner.java) · [Producer](services/member-service/src/main/java/dev/reguard/member/alerts/RecallAlertProducer.java) |
-| **웹·실행 환경** | React 화면·Caddy 라우팅·로컬 k3s·영속 볼륨 | [Web](web/) · [Caddy](infra/runtime/Caddyfile) · [Release](infra/release/) |
+| **수집 일정 관리** | 기관별 데이터 수집과 원본 보존<br />재시도 및 완료 확인 | [Collectors](pipelines/collectors/)<br />[Airflow](orchestration/airflow/) |
+| **데이터 처리** | 이벤트 검증과 중복 처리<br />데이터 저장 및 리콜 매칭 | [Spark pipeline](pipelines/spark/) |
+| **서비스 API** | 회원 / 안전 정보 / 알림 서비스의 책임과 DB 소유권 분리 | [Member](services/member-service/)<br />[Safety](services/safety-service/)<br />[Notification](services/notification-service/) |
+| **알림 전달** | Safety API 조회 → Outbox 기록 → Kafka → Notification | [Scanner](services/member-service/src/main/java/dev/reguard/member/alerts/RecallAlertScanner.java)<br />[Producer](services/member-service/src/main/java/dev/reguard/member/alerts/RecallAlertProducer.java) |
+| **실행 환경** | React 화면과 Caddy 라우팅<br />로컬 k3s 및 영속 볼륨 | [Web](web/)<br />[Caddy](infra/runtime/Caddyfile)<br />[Release](infra/release/) |
 
 실행 환경은 단일 노드 로컬 k3s입니다. 서비스별로 논리 DB를 분리합니다.
 
@@ -64,17 +64,24 @@ Member는 Safety API로 보유 제품의 리콜을 확인합니다. Outbox에 �
 
 ## Quick Start
 
-**필수 환경:** JDK 21 · Python 3.12 · uv · Node.js 22.22.2+ (22.x) 또는 24.15.0+ (24.x) · Docker Compose
+**필수 환경**
 
-Docker 엔진을 시작한 뒤 저장소 루트에서 실행합니다. 아래 절차는 PostgreSQL을 Compose로 실행하고 Java·Vite를 로컬에서 실행하는 개발 환경입니다.
+| 도구 | 버전 |
+|---|---|
+| JDK | 21 |
+| Python | 3.12 |
+| Node.js | 22.22.2+ (22.x) 또는 24.15.0+ (24.x) |
+| 패키지 및 컨테이너 도구 | uv / Docker Compose |
+
+Docker 엔진을 시작한 뒤 저장소 루트에서 실행합니다. 아래 절차는 PostgreSQL을 Compose로 실행하고 Java와 Vite를 로컬에서 실행하는 개발 환경입니다.
 
 `.env`를 만든 뒤 아래 값을 입력합니다. 기존 파일은 유지합니다.
 
 | 설정 | 용도 |
 |---|---|
-| `POSTGRES_PASSWORD` · `MEMBER_DB_PASSWORD` · `SAFETY_DB_PASSWORD` · `NOTIFICATION_DB_PASSWORD` | DB 초기화와 서비스 연결에 필수 |
-| `MAIL_ENABLED=true` · `MAIL_FROM` · `SMTP_*` | 회원가입 인증 메일과 비밀번호 재설정 |
-| `FOOD_SAFETY_API_KEY` · `SAFETY_KOREA_API_KEY` | 수집 파이프라인 실행에 필수 |
+| `POSTGRES_PASSWORD`<br />`MEMBER_DB_PASSWORD`<br />`SAFETY_DB_PASSWORD`<br />`NOTIFICATION_DB_PASSWORD` | DB 초기화와 서비스 연결에 필수 |
+| `MAIL_ENABLED=true`<br />`MAIL_FROM`<br />`SMTP_*` | 회원가입 인증 메일과 비밀번호 재설정 |
+| `FOOD_SAFETY_API_KEY`<br />`SAFETY_KOREA_API_KEY` | 수집 파이프라인 실행에 필수 |
 
 회원가입에는 SMTP 설정이 필요합니다. DB 비밀번호는 최초 초기화 때 적용되며 기존 DB의 비밀번호 변경은 별도로 진행합니다.
 
@@ -97,7 +104,7 @@ docker compose --env-file .env -f infra/compose/compose.yml up -d --wait
 npm --prefix web run dev               # http://localhost:3000
 ```
 
-브라우저에서 `http://localhost:3000`으로 접속합니다. 기존 프로세스가 3000·8081~8083·15432 포트를 사용 중이면 먼저 포트 충돌을 해결합니다.
+브라우저에서 `http://localhost:3000`으로 접속합니다. 기존 프로세스가 3000 / 8081~8083 / 15432 포트를 사용 중이면 먼저 포트 충돌을 해결합니다.
 
 처음 실행한다면 초기 데이터를 적재한 뒤 증분 수집을 시작합니다.
 
@@ -106,11 +113,17 @@ npm --prefix web run dev               # http://localhost:3000
 
 저장소 루트에서 실행합니다. 앞 단계의 PostgreSQL과 Safety 서비스를 먼저 실행해 DB 스키마를 생성합니다. `.env`에 DB 비밀번호와 두 기관 API 키를 입력합니다. 초기 적재 중에는 Airflow 수집과 Spark를 실행하지 않습니다. 이미 실행 중이면 진행 중인 수집이 끝난 뒤 `bash scripts/airflow.sh stop`으로 중지합니다.
 
-기관이 제공하는 현재 전체 파일을 DB에 적재합니다. 이후 변경분은 아래 Kafka·Spark 수집 절차로 반영합니다.
+기관이 제공하는 현재 전체 파일을 DB에 적재합니다. 이후 변경분은 아래 Kafka와 Spark 수집 절차로 반영합니다.
 
 **1. 식품 전체 파일 다운로드**
 
-일반식품 `I1250` · 건강기능식품 `I0030` · 식품 리콜 `I0490`의 파일 API 사용 권한이 필요합니다. 기존 다운로드 함수로 파일 형식·해시·최신성을 검사합니다.
+다음 파일 API의 사용 권한이 필요합니다. 다운로드 시 파일 형식과 해시를 검사하고 최신성을 확인합니다.
+
+| 데이터 | 서비스 ID |
+|---|---|
+| 일반식품 | `I1250` |
+| 건강기능식품 | `I0030` |
+| 식품 리콜 | `I0490` |
 
 ```bash
 uv run python - <<'PY'
@@ -189,7 +202,7 @@ done
 bash scripts/airflow.sh up
 ```
 
-앞 단계의 DB와 세 Java 서비스를 실행한 상태에서 진행합니다. `airflow.sh up`은 Airflow와 Spark를 빌드하고 시작합니다. 최초 실행에는 이미지·의존성 다운로드가 필요합니다.
+앞 단계의 DB와 세 Java 서비스를 실행한 상태에서 진행합니다. `airflow.sh up`은 Airflow와 Spark를 빌드하고 시작합니다. 최초 실행에는 이미지와 의존성 다운로드가 필요합니다.
 
 Airflow는 `http://localhost:18080`에서 확인합니다. 로컬 계정은 `admin`입니다. 초기 비밀번호는 아래 명령으로 확인합니다.
 
@@ -202,7 +215,7 @@ docker compose --env-file .env -f orchestration/airflow/compose.yml \
 
 새 알림을 생성하려면 `.env`에서 `ALERTS_ENABLED=true`를 설정하고 Member와 Notification을 재시작합니다. 기본 Kafka 주소는 `127.0.0.1:19092`입니다. 사용자 수신 설정과 등록 물건에 연결된 리콜도 필요합니다.
 
-[환경 변수](.env.example) · [Airflow DAG](orchestration/airflow/dags/reguard.py) · [수집 실행](orchestration/airflow/execution.py)
+관련 파일: [환경 변수](.env.example) / [Airflow DAG](orchestration/airflow/dags/reguard.py) / [수집 실행](orchestration/airflow/execution.py)
 
 </details>
 
@@ -210,7 +223,7 @@ docker compose --env-file .env -f orchestration/airflow/compose.yml \
 
 ## Verification
 
-Python·Java·웹 테스트와 웹 빌드:
+Python과 Java 테스트 및 웹 테스트와 빌드:
 
 ```bash
 uv run python scripts/check.py --suite all
@@ -219,7 +232,7 @@ uv run python scripts/check.py --suite all
 <details>
 <summary><strong>Spark 장애 복구 테스트</strong></summary>
 
-Spark 장애 복구 검증에는 Docker 환경과 `reguard-spark:portable-20261015.2` 런타임 이미지가 필요합니다. 이미지가 없으면 다음 명령으로 테스트에 필요한 Spark 이미지만 빌드합니다. 베이스 이미지는 [고정 버전 목록](infra/release/bases.json)을 사용합니다. 현재 릴리스 대상은 Linux ARM64입니다. 다른 아키텍처에서는 에뮬레이션이 필요할 수 있습니다. 검증 도구는 별도 Kafka·PostgreSQL·Spark 컨테이너를 생성하고 종료 후 정리합니다.
+Spark 장애 복구 검증에는 Docker 환경과 `reguard-spark:portable-20261015.2` 런타임 이미지가 필요합니다. 이미지가 없으면 다음 명령으로 테스트에 필요한 Spark 이미지만 빌드합니다. 베이스 이미지는 [고정 버전 목록](infra/release/bases.json)을 사용합니다. 현재 릴리스 대상은 Linux ARM64입니다. 다른 아키텍처에서는 에뮬레이션이 필요할 수 있습니다. 검증 도구는 격리된 Kafka / PostgreSQL / Spark 컨테이너를 생성하고 종료 후 정리합니다.
 
 ```bash
 docker build --platform linux/arm64 -f infra/release/Spark.Dockerfile \
@@ -236,13 +249,11 @@ uv run python scripts/verify_spark_crash_recovery.py
 ## Project Structure
 
 ```text
-services/         회원·안전 정보·알림 Spring Boot 서비스
-pipelines/        기관별 수집·정규화·저장·매칭
-orchestration/    Airflow DAG와 수집·품질 검사 조율
+services/         회원 / 안전 정보 / 알림 Spring Boot 서비스
+pipelines/        기관별 수집과 정규화 및 리콜 매칭
+orchestration/    Airflow 수집 일정과 품질 검사
 web/              React 웹 애플리케이션
-infra/            실행 환경·컨테이너·배포 설정
-scripts/          실행·설치·복구 도구와 통합 검증
-assets/readme/    공개 데모·아키텍처·검증 결과
+infra/            컨테이너와 배포 설정
+scripts/          실행 및 복구 도구와 통합 검증
+assets/readme/    데모 이미지와 검증 결과
 ```
-
-데이터 출처: **식품안전나라 · Safety Korea**. 제품·리콜 원문은 공공기관 정보를 따릅니다. 후보 매칭은 대상 조건을 추가로 확인해야 합니다.
