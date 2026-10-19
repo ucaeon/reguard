@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <a href="#overview">Overview</a> · <a href="#architecture">Architecture</a> · <a href="#quick-start">Quick Start</a> · <a href="#verification">Verification</a>
+  <a href="#overview">Overview</a> · <a href="#architecture">Architecture</a> · <a href="#demo">Demo</a> · <a href="#quick-start">Quick Start</a> · <a href="#verification">Verification</a>
 </p>
 
 <br />
@@ -67,6 +67,16 @@ Member는 Safety API로 보유 제품의 리콜을 확인합니다. Outbox에 �
 | **실행 환경** | React 화면과 Caddy 라우팅<br />로컬 k3s 및 영속 볼륨 | [Web](web/)<br />[Caddy](infra/runtime/Caddyfile)<br />[Release](infra/release/) |
 
 실행 환경은 단일 노드 로컬 k3s입니다. 서비스별로 논리 DB를 분리합니다.
+
+<br />
+
+## Demo
+
+| 리콜 검색 | 리콜 상세 |
+|:---:|:---:|
+| ![리콜 검색 화면](web/public/images/service-demo/recall-list.jpg) | ![리콜 사유와 검사 결과](web/public/images/service-demo/recall.jpg) |
+| **내 물건 등록** | **알림 확인** |
+| ![내 물건 수동 등록 화면](web/public/images/service-demo/manual-submit.jpg) | ![내 물건 관련 리콜 알림](web/public/images/service-demo/alerts.jpg) |
 
 <br />
 
